@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>My Tasks</title>
+        <link rel="stylesheet" href="../css/style.css">
+    </head>
+    <body>
+        <nav>
+            <span id="userName"></span>
+            <button onclick="logout()">Logout</button>
+            <span id="notifBell">🔔 <span id="notifCount">0</span></span>
+        </nav>
+
+        <div class="container">
+            <h2>My Tasks</h2>
+            <div id="taskList"></div>
+        </div>
+
+        <script src="../js/api.js"></script>
+        <script>
+            document.getElementById('userName').textContent=localStorage.getItem('name');
+
+            async function loadTasks() {
+                const tasks=await API.get('/member/tasks');
+                const list=document.getElementById('taskList');
+                list.innerHTML=tasks.map(t=>`
+                <div class="task-card">
+                    <h3>${t[1]}</h3>
+                    <p>${t[2]}</p>
+                    <p>Deadline: ${t[5]}</p>
+                    <select onchange="updateStatus(${t[0]}, this.value)">
+                        <option value="todo" ${t[3]=='todo'?'selected':''}>To Do</option>
+                        <option value="inprogress" ${t[3]==='inprogress'?'selected':''}>In Progress</option>
+                        <option value="done" ${t[3]==='done'?'selected':''}>Done</option>
+          </select>
+        </div>
+      `).join('');
+    }
+
+    async function updateStatus(id, status) {
+      await API.put(`/member/tasks/${id}/status`, { status });
+    }
+
+    async function loadNotification(){
+        const notifs=await API.get('/member/notifications');
+        const uread=notifs.filter(n=> !n[3]).length;
+        document.getElementById('notifCount').textContent = unread;
+    }
+
+    function logout(){
+        localStorage.clear();
+        location.href='../index.html';
+    }
+
+    loadTasks();
+    loadNotifications();
+        </script>
+    </body>
+</html>
