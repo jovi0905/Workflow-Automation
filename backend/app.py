@@ -6,7 +6,7 @@ from config import config
 
 app=Flask(__name__)
 app.config.from_object(config)
-CORS(app,origins="*")
+CORS(app,origins=["https://jovi0905.github.io"])
 
 mysql=MySQL(app)
 jwt=JWTManager(app)
