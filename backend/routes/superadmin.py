@@ -1,5 +1,5 @@
 from flask import Blueprint,request,jsonify
-from middleware.auth_gaurd import role_required
+from middleware.auth_guard import role_required
 from app import get_db
 
 superadmin_bp=Blueprint('superadmin',__name__)
@@ -7,7 +7,7 @@ superadmin_bp=Blueprint('superadmin',__name__)
 @superadmin_bp.route('/users',methods=['GET'])
 @role_required('superadmin')
 def get_all_users():
-    cur=get_db.connection.cursor()
+    cur=db.cursor
     cur.execute("SELECT id, name, email, role, created_at FROM users")
     users=cur.fetchall()
     return jsonify(users)
@@ -15,9 +15,11 @@ def get_all_users():
 @superadmin_bp.route('/users/<int:user_id>', methods=['DELETE'])
 @role_required('superadmin')
 def delete_user(user_id):
-    cur = get_db.connection.cursor()
+    db=get_db()
+    cur=db.cursor()
     cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
-    get_db.connection.commit()
+    db.commit()
+    db.close()
     cur.close()
     return jsonify({'message': 'User deleted'})
 
@@ -25,8 +27,10 @@ def delete_user(user_id):
 @role_required('superadmin')
 def change_role(user_id):
     data=request.json
-    cur=get_db.connection.cursor()
+    db=get_db()
+    cur=db.cursor()
     cur.execute("UPDATE users SET role=%s WHERE id=%s",(data['role'],user_id))
-    get_db.connection.commit()
+    db.commit()
+    db.close()
     cur.close()
     return jsonify({'message':'Role Updated'})
