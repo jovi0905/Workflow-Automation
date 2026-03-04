@@ -1,7 +1,7 @@
 from flask import Blueprint,jsonify,request
 from flask_jwt_extended import get_jwt_identity
 from middleware.auth_gaurd import role_required
-from app import mysql
+from app import get_db
 
 member_bp=Blueprint('member',__name__)
 
@@ -9,7 +9,7 @@ member_bp=Blueprint('member',__name__)
 @role_required('member', 'admin', 'superadmin')
 def get_my_tasks():
     identity=get_jwt_identity()
-    cur=mysql.connection.cursor()
+    cur=get_db.connection.cursor()
     cur.execute("SELECT * FROM tasks WHERE assigned_to=%s",(identity['id'],))
     tasks=cur.fetchall()
     cur.close()
@@ -19,9 +19,9 @@ def get_my_tasks():
 @role_required('member','admin','superadmin')
 def update_status(task_id):
     data=request.json
-    cur= mysql.connection.cursor()
+    cur= get_db.connection.cursor()
     cur.execute("UPDATE tasks SET status = %s WHERE id = %s", (data['status'], task_id))
-    mysql.connection.commit()
+    get_db.connection.commit()
     cur.close()
     return jsonify({'message':'Status Updated'})
 
@@ -29,7 +29,7 @@ def update_status(task_id):
 @role_required('member','admin','superadmin')
 def get_notifications():
     identity=get_jwt_identity()
-    cur=mysql.connection.cursor()
+    cur=get_db.connection.cursor()
     cur.execute("SELECT * FROM notifications WHERE user_id = %s ORDER BY created_at DESC",
                 (identity['id'],))
     notifs = cur.fetchall() 
